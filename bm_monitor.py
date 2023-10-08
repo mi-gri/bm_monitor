@@ -3,7 +3,8 @@
 # Brandmeister Monitor
 # Develped by: Michael Clemens, DK1MI
 # Refactored by: Jeff Lehman, N8ACL
-# Current Version: 1.1
+# Modified by: Michael Grigutsch, DO3BOX
+# Current Version: 1.2
 # Original Script: https://codeberg.org/mclemens/pyBMNotify
 # Refactored Script: https://github.com/n8acl/bm_monitor
 
@@ -63,20 +64,6 @@ def push_pushover(msg):
         }), { "Content-type": "application/x-www-form-urlencoded" })
     conn.getresponse()
 
-# Send push notification via Telegram. Disabled if not configured in config.py
-# def push_telegram(msg):
-#     client = TelegramClient('bm_bot', cfg.telegram_api_id, cfg.telegram_api_hash) 
-#     client.connect() 
-#     if not client.is_user_authorized(): 
-#         client.send_code_request(cfg.phone) 
-#         client.sign_in(cfg.phone, input('Please enter the code which has been sent to your phone: ')) 
-#     try: 
-#         receiver = InputPeerUser('user_id', 'user_hash') 
-#         client.send_message(cfg.telegram_username, msg) 
-#     except Exception as e: 
-#         print(e); 
-#     client.disconnect() 
-
 def push_telegram(msg):
     telegram_url = "https://api.telegram.org/bot" + cfg.telegram_api_hash + "/sendmessage"
 
@@ -107,7 +94,30 @@ def construct_message(c):
     out += str(tg) + ' (' + c["DestinationName"] + ') at '
     out += time + ' (' + str(duration) + ' seconds)'
     # finally return the text message
+    print (out)
     return out
+
+def construct_long_message(c):
+    tg = c["DestinationID"]
+    out = ""
+    duration = c["Stop"] - c["Start"]
+    # convert unix time stamp to human readable format
+    time = dt.datetime.utcfromtimestamp(c["Start"]).strftime("%Y/%m/%d %H:%M")
+    # convert SourceID zu str
+    source_id = str(c["SourceID"])
+    # convert TalkerAlias zu str
+    talker_alias = str(c.get("TalkerAlias", ""))
+    # convert ContextID zu str
+    relais  = str(c["ContextID"])
+    # construct text message from various transmission properties
+    out += 'Call: ' + c["SourceCall"] + ' (' + source_id + ', ' + c["SourceName"] + ', TA:' + talker_alias + '):\n'
+    out += 'TG: ' + str(tg) + ' (' + c["DestinationName"] + ') at ' + time + ' (' + str(duration) + ' seconds)\n'
+    out += 'RelaisID:' + str(relais) + ' (' + c["LinkCall"] + ')\n---\n'
+    # finally return the text message
+    if cfg.verbose:
+        print (out)
+    return out
+
 
 #############################
 ##### Define SocketIO Callback Functions
@@ -120,6 +130,7 @@ def connect():
 def on_mqtt(data):
     call = json.loads(data['payload'])
     tg = call["DestinationID"]
+    rpt = call["LinkCall"]
     callsign = call["SourceCall"]
     start_time = call["Start"]
     stop_time = call["Stop"]
@@ -132,7 +143,7 @@ def on_mqtt(data):
     else:
         # check if callsign is monitored, the transmission has already been finished
         # and the person was inactive for n seconds
-        if callsign in cfg.callsigns:
+        if rpt in cfg.repeater or callsign in cfg.callsigns:
             if callsign not in last_OM_activity:
                 last_OM_activity[callsign] = 9999999
             inactivity = now - last_OM_activity[callsign]
@@ -164,11 +175,11 @@ def on_mqtt(data):
             if cfg.pushover:
                 push_pushover(construct_message(call))
             if cfg.telegram:
-                push_telegram({'text': construct_message(call), 'chat_id': cfg.telegram_api_id, "disable_notification": True})
+                push_telegram({'text': construct_long_message(call), 'chat_id': cfg.telegram_api_id, "disable_notification": True})
             if cfg.dapnet:
                 push_dapnet(construct_message(call))
             if cfg.discord:
-                push_discord(cfg.discord_wh_url, construct_message(call))
+                push_discord(cfg.discord_wh_url, construct_long_message(call))
 
 @sio.event
 def disconnect():
