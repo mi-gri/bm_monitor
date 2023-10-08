@@ -43,6 +43,4 @@ If you reach out to me and have an error, please include what error you are gett
 
 ## Change Log
 
-* 08/10/2023 - Release 1.2 - added long notify (for telegram) and notification based on used repeater/hotspot callsign
-
-* 07/12/2022 - Inital Release
+* 08/10/2023 - Release 1.2 - added long notify (for telegram) and notification based on used repeater/hotspot callsign 
