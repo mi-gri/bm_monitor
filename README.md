@@ -6,8 +6,7 @@ Brandmeister Last Heard Monitor/Notifier
 
 This Python script will listen to the Brandmeister Last Heard API endpoint for any callsign or Talkgroup (or both) that you configure and it will send you a notification when there is activity for those callsigns and/or talkgroups.
 
-This script is really just a refactoring using a newer socketIO python library from what the orginal pyBMNotify script was using. Brandmesiter updated the protocol that their API was using a few months ago and the old script did not support the newer protocol, so I just refactored the script for this newer protocol. The actual logic and guts of the script are still the same as the original pyBMNotify script that [Michael Clemens, DK1MI](https://qrz.is/) wrote and
-[Jeff Lehman, N8ACL] modified and that is all THEIR work. That is why this is a fork, not an original work. I wanted to make sure that was clear. I did not do the heay lifting for this project, I just added and modifioed some code. Everything else is their work.
+This script is really just a refactoring using a newer socketIO python library from what the orginal pyBMNotify script was using. Brandmesiter updated the protocol that their API was using a few months ago and the old script did not support the newer protocol, so I just refactored the script for this newer protocol. The actual logic and guts of the script are still the same as the original pyBMNotify script that [Michael Clemens, DK1MI](https://qrz.is/) wrote and [Jeff Lehman, N8ACL] modified and that is all THEIR work. That is why this is a fork, not an original work. I wanted to make sure that was clear. I did not do the heavy lifting for this project, I just added and modified some code. Everything else is their work.
 
 This script is for use by Amateur Radio Operators Only.
 
